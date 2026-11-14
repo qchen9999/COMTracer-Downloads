@@ -1,0 +1,23 @@
+name: Publish signed downloads
+on:
+  push:
+    branches: ['signed/v*']
+permissions:
+  contents: write
+concurrency:
+  group: publish-signed-downloads-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+      - name: Publish and verify release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/publish.py
+      - name: Remove the verified handoff branch
+        run: git push --force-with-lease="$GITHUB_REF:$GITHUB_SHA" origin ":$GITHUB_REF"
